@@ -27,7 +27,7 @@ jobs:
         go build -v -ldflags="-H windowsgui -s -w" -o IPC-Toyz.exe .
         
     - name: Upload artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: IPC-Toyz-Windows
         path: IPC-Toyz.exe
