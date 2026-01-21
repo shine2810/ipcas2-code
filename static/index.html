@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPCAS2 Tool</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background: #f0f0f0;
+            color: #333;
+            font-size: 13px;
+        }
+        .header {
+            background: linear-gradient(135deg, #006633, #004d26);
+            color: white;
+            padding: 12px 20px;
+            text-align: center;
+            font-size: 16px;
+            font-weight: 500;
+        }
+        .tabs {
+            display: flex;
+            background: #e8e8e8;
+            border-bottom: 1px solid #ccc;
+        }
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        .tab:hover { background: #ddd; }
+        .tab.active {
+            background: #f0f0f0;
+            border-bottom: 2px solid #006633;
+            color: #006633;
+        }
+        .content { padding: 15px; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+        .btn-primary { background: #006633; color: white; }
+        .btn-primary:hover { background: #004d26; }
+        .btn-secondary { background: #888; color: white; }
+        .btn-secondary:hover { background: #666; }
+        .btn-danger { background: #c00; color: white; }
+        .btn-danger:hover { background: #900; }
+        
+        .btn-row { display: flex; gap: 8px; margin-bottom: 12px; }
+        .btn-row .btn { flex: 1; }
+        
+        input, select {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 13px;
+            margin-bottom: 10px;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #006633;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 4px;
+            color: #555;
+            font-size: 12px;
+        }
+        
+        .status {
+            padding: 8px;
+            background: #e8e8e8;
+            border-radius: 4px;
+            margin-bottom: 12px;
+            font-size: 12px;
+        }
+        
+        .file-list {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+        }
+        .file-item {
+            padding: 8px 10px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .file-item:last-child { border-bottom: none; }
+        .file-item:hover { background: #f8f8f8; }
+        .file-path { flex: 1; word-break: break-all; font-size: 12px; }
+        .file-size { color: #888; font-size: 11px; }
+        
+        .author-section {
+            text-align: center;
+            padding: 20px;
+        }
+        .author-name {
+            font-size: 18px;
+            color: #006633;
+            margin-bottom: 4px;
+        }
+        .author-org {
+            color: #666;
+            margin-bottom: 20px;
+        }
+        .donate-box {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .donate-title {
+            color: #888;
+            font-size: 11px;
+            margin-bottom: 8px;
+        }
+        .donate-value {
+            font-size: 16px;
+            color: #006633;
+            font-weight: 500;
+        }
+        .donate-label {
+            color: #888;
+            font-size: 11px;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 10px;
+            color: #999;
+            font-size: 10px;
+            border-top: 1px solid #ddd;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #f0f0f0;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 4px;
+            display: none;
+            z-index: 1000;
+        }
+        .toast.show { display: block; }
+    </style>
+</head>
+<body>
+    <div class="header">IPCAS2 Tool</div>
+    
+    <div class="tabs">
+        <div class="tab active" data-tab="scan">Quét file</div>
+        <div class="tab" data-tab="shutdown">Hẹn giờ</div>
+        <div class="tab" data-tab="network">Ổ mạng</div>
+        <div class="tab" data-tab="author">Tác giả</div>
+    </div>
+    
+    <div class="content">
+        <!-- Tab Quét -->
+        <div id="scan" class="tab-content active">
+            <div class="btn-row">
+                <button class="btn btn-primary" onclick="scanFiles()">Quét</button>
+                <button class="btn btn-secondary" onclick="selectAll()">Chọn hết</button>
+                <button class="btn btn-danger" onclick="deleteFiles()">Xóa</button>
+            </div>
+            <div class="status" id="scanStatus">Sẵn sàng</div>
+            <div class="file-list" id="fileList"></div>
+        </div>
+        
+        <!-- Tab Hẹn giờ -->
+        <div id="shutdown" class="tab-content">
+            <label>Số phút:</label>
+            <input type="number" id="minutes" placeholder="Nhập số phút...">
+            <div class="btn-row">
+                <button class="btn btn-primary" onclick="setShutdown()">Đặt hẹn</button>
+                <button class="btn btn-danger" onclick="cancelShutdown()">Hủy hẹn</button>
+            </div>
+            <div class="status" id="shutdownStatus">Chưa hẹn giờ</div>
+        </div>
+        
+        <!-- Tab Ổ mạng -->
+        <div id="network" class="tab-content">
+            <label>Đường dẫn:</label>
+            <input type="text" id="netPath" placeholder="\\192.168.1.100\shared">
+            <label>Ổ đĩa:</label>
+            <select id="netDrive">
+                <option>Z:</option><option>Y:</option><option>X:</option><option>W:</option>
+                <option>V:</option><option>U:</option><option>T:</option><option>S:</option>
+            </select>
+            <div class="btn-row">
+                <button class="btn btn-primary" onclick="mapDrive()">Kết nối</button>
+                <button class="btn btn-danger" onclick="unmapDrive()">Ngắt</button>
+            </div>
+            <div class="status" id="netStatus">Đang tải...</div>
+        </div>
+        
+        <!-- Tab Tác giả -->
+        <div id="author" class="tab-content">
+            <div class="author-section">
+                <div class="author-name">Phan Tiến</div>
+                <div class="author-org">Agribank Chi nhánh Tây Nghệ An</div>
+                
+                <div class="donate-box">
+                    <div class="donate-title">— Ủng hộ tác giả —</div>
+                    <div class="donate-value">3611205088888</div>
+                    <div class="donate-label">Ngân hàng Agribank</div>
+                </div>
+                
+                <div class="donate-box">
+                    <div class="donate-title">— Liên hệ —</div>
+                    <div class="donate-value">0945626999</div>
+                    <div class="donate-label">ĐT / Zalo</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="footer">Phan Tiến · Agribank Tây Nghệ An</div>
+    <div class="toast" id="toast"></div>
+
+    <script>
+        let files = [];
+        
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab).classList.add('active');
+            });
+        });
+        
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 2000);
+        }
+        
+        async function scanFiles() {
+            document.getElementById('scanStatus').textContent = 'Đang quét...';
+            const res = await fetch('/api/scan').then(r => r.json());
+            files = res.data || [];
+            document.getElementById('scanStatus').textContent = res.message;
+            renderFiles();
+        }
+        
+        function renderFiles() {
+            const list = document.getElementById('fileList');
+            if (files.length === 0) {
+                list.innerHTML = '<div class="file-item">Không có file nào</div>';
+                return;
+            }
+            list.innerHTML = files.map((f, i) => `
+                <div class="file-item">
+                    <input type="checkbox" data-idx="${i}">
+                    <span class="file-path">${f.path}</span>
+                    <span class="file-size">${f.sizeStr}</span>
+                </div>
+            `).join('');
+        }
+        
+        function selectAll() {
+            const checks = document.querySelectorAll('#fileList input[type=checkbox]');
+            const allChecked = [...checks].every(c => c.checked);
+            checks.forEach(c => c.checked = !allChecked);
+        }
+        
+        async function deleteFiles() {
+            const checks = document.querySelectorAll('#fileList input[type=checkbox]:checked');
+            const paths = [...checks].map(c => files[c.dataset.idx].path);
+            if (paths.length === 0) {
+                showToast('Chọn file trước');
+                return;
+            }
+            if (!confirm('Xóa ' + paths.length + ' file?')) return;
+            const res = await fetch('/api/delete', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(paths)
+            }).then(r => r.json());
+            showToast(res.message);
+            scanFiles();
+        }
+        
+        async function setShutdown() {
+            const m = document.getElementById('minutes').value;
+            const res = await fetch('/api/shutdown?minutes=' + m).then(r => r.json());
+            document.getElementById('shutdownStatus').textContent = res.message;
+            showToast(res.message);
+        }
+        
+        async function cancelShutdown() {
+            const res = await fetch('/api/shutdown/cancel').then(r => r.json());
+            document.getElementById('shutdownStatus').textContent = res.message;
+            showToast(res.message);
+        }
+        
+        async function loadNetworkStatus() {
+            const res = await fetch('/api/network/list').then(r => r.json());
+            const drives = res.data || [];
+            document.getElementById('netStatus').textContent = 
+                drives.length ? 'Đã kết nối: ' + drives.join(', ') : 'Chưa kết nối ổ mạng';
+        }
+        
+        async function mapDrive() {
+            const drive = document.getElementById('netDrive').value;
+            const path = document.getElementById('netPath').value;
+            if (!path) { showToast('Nhập đường dẫn'); return; }
+            const res = await fetch('/api/network/map?drive=' + drive + '&path=' + encodeURIComponent(path)).then(r => r.json());
+            showToast(res.message);
+            loadNetworkStatus();
+        }
+        
+        async function unmapDrive() {
+            const drive = document.getElementById('netDrive').value;
+            const res = await fetch('/api/network/unmap?drive=' + drive).then(r => r.json());
+            showToast(res.message);
+            loadNetworkStatus();
+        }
+        
+        // Init
+        loadNetworkStatus();
+    </script>
+</body>
+</html>

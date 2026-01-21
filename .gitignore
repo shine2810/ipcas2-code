@@ -1,0 +1,22 @@
+# Binaries
+*.exe
+*.dll
+!icon.png
+
+# Go
+go.sum
+
+# Build cache
+.vscode/
+.idea/
+
+# Temp files
+*.tmp
+*.log
+
+# Backup
+*.bak
+
+# OS
+Thumbs.db
+.DS_Store

@@ -1,0 +1,41 @@
+name: Build IPC-Toyz
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Setup Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.21'
+        
+    - name: Install dependencies
+      run: go mod download
+      
+    - name: Build executable
+      run: |
+        $env:CGO_ENABLED=1
+        go build -v -ldflags="-H windowsgui -s -w" -o IPC-Toyz.exe .
+        
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: IPC-Toyz-Windows
+        path: IPC-Toyz.exe
+        
+    - name: Create Release (on tag)
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: IPC-Toyz.exe
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
